@@ -1,0 +1,189 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Tic Tac Toe</title>
+    <link href="{% static 'abc.css' %}" rel="stylesheet" />
+</head>
+
+<body>
+    <section>
+        <h1 class="game--title">Tic Tac Toe</h1>
+        <div class="game--container" id = "board">
+            <div id = "0" data-cell-index="0" class="cell"></div>
+            <div id = "1" data-cell-index="1" class="cell"></div>
+            <div id = "2" data-cell-index="2" class="cell"></div>
+            <div id = "3" data-cell-index="3" class="cell"></div>
+            <div id = "4" data-cell-index="4" class="cell"></div>
+            <div id = "5" data-cell-index="5" class="cell"></div>
+            <div id = "6" data-cell-index="6" class="cell"></div>
+            <div id = "7" data-cell-index="7" class="cell"></div>
+            <div id = "8" data-cell-index="8" class="cell"></div>
+        </div>
+        <h2 class="game--status"> hii</h2>
+        <button class="game--restart">Restart Game</button>
+    </section>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/1.1.3/sweetalert.min.js"></script>
+<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+ <script>
+
+    var user = '{{username}}';
+    var roomname = '{{roomname}}';
+    var player = user.charAt(0)
+    var setected = new Set();  
+    var ws = new WebSocket('ws://127.0.0.1:8000/ws/sc');
+    let gamestate = ["","","","","","","","",""]
+    var value = player
+
+    
+    let abc = document.querySelectorAll('.cell');
+
+    abc.forEach(function (e) {
+        e.addEventListener('click', function (ea) {
+            //settext(e.path[0].getAttribute('data-cell-index'),player)
+            var x = ea.path[0].getAttribute('data-cell-index');
+
+            
+            var btn = document.getElementById(x);
+            
+            if (btn.innerText == "") {
+            btn.innerText = player      
+            }
+
+            if (gamestate[parseInt(x)] == ""){
+                gamestate[parseInt(x)] = player
+               
+            }
+            
+            var data = {
+                     'player': player,
+                     'index': x,
+                     'type':'running'
+                    } 
+            ws.send(JSON.stringify({data}));        
+
+            checkwon(value,player);
+
+            checkgameend();
+
+   
+        })
+    })
+
+    function checkgameend() {
+            var count = 0;
+            gamestate.map((game) => {
+               
+                if (game != "") {
+                    count++;                   
+                }
+
+            })
+            if (count >= 9) {
+                var data = { 'type': 'over' }
+                ws.send(JSON.stringify({ data }))
+                swal("good game ended, MAtch Tie", "warning")
+            }
+
+        } 
+    
+    function checkwon(value, player) {
+            var won = false;
+            if (gamestate[0] === value && gamestate[1] === value && gamestate[2] === value) {
+                won = true;
+            } else if (gamestate[3] === value && gamestate[4] === value && gamestate[5] === value) {
+                won = true;
+            } else if (gamestate[6] === value && gamestate[7] === value && gamestate[8] === value) {
+                won = true;
+            } else if (gamestate[0] === value && gamestate[3] === value && gamestate[6] === value) {
+                won = true;
+            } else if (gamestate[1] === value && gamestate[4] === value && gamestate[7] === value) {
+                won = true;
+            } else if (gamestate[2] === value && gamestate[5] === value && gamestate[8] === value) {
+                won = true;
+            } else if (gamestate[0] === value && gamestate[4] === value && gamestate[8] === value) {
+                won = true;
+            } else if (gamestate[2] === value && gamestate[4] === value && gamestate[6] === value) {
+                won = true;
+            }
+            if (won) {
+                data = { 'type': 'end', 'player': player }
+                ws.send(JSON.stringify({data}));
+                swal("you won!","you won");
+            }
+        }
+
+        ws.onmessage = function (event) {
+         
+         var data = JSON.parse(event.data);
+
+         console.log(data["data"]["player"])
+         console.log(player)   
+
+         if(data["data"]["type"] == "end" && data["data"]["player"] == player) {
+            swal("sorry","you lose","error")
+         }else if(data["data"]["type"] == "over") {
+                swal("game over","no one win ","warning")
+         }else if(data["data"]["type"] == "running" && data["data"]["player"] !== player) {
+                setAnotherUserTest(data["data"]["index"],data["data"]["player"])
+         }                           
+
+        };
+
+        function setAnotherUserTest(index, player) {
+            var x = index ;
+            var btn = document.getElementById(x);
+            if (btn.innerText == "") {
+                btn.innerText = player
+            }
+            if (gamestate[parseInt(x)] == "") {
+                gamestate[parseInt(x)] = player
+            }
+
+            var data = {
+                'player': player,
+                'index': x,
+                'type': 'running'
+            }
+            ws.send(JSON.stringify({ data }));
+
+            checkwon(value, player);
+            checkgameend();
+
+        }
+
+        ws.close = function (event) {
+         console.log(" onclose ", event)
+
+        };
+
+    
+        
+    // var ws = new WebSocket('ws://127.0.0.1:8000/ws/asc')
+
+    // ws.onopen = function (event) {
+    //     console.log(" open server ")
+    //     ws.send('hii data send from client to server')
+    // }
+  
+    // ws.onmessage = function (event) {
+    //     console.log(" onmessage ", event.data)
+    //     var data = event.data
+
+    // };
+
+    // ws.close = function (event) {
+    //     console.log(" onclose ", event)
+
+    // };
+    
+</script> 
+</body>
+
+</html>
