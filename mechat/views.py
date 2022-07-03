@@ -1,5 +1,4 @@
-import re
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse
 from django.shortcuts import render
 from .forms import joinform
 

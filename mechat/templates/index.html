@@ -40,7 +40,7 @@
     var ws = new WebSocket('ws://127.0.0.1:8000/ws/sc');
     let gamestate = ["","","","","","","","",""]
     var value = player
-
+    var turn = ""
     
     let abc = document.querySelectorAll('.cell');
 
@@ -53,6 +53,7 @@
             var btn = document.getElementById(x);
             
             if (btn.innerText == "") {
+                
             btn.innerText = player      
             }
 
@@ -66,6 +67,7 @@
                      'index': x,
                      'type':'running'
                     } 
+                    
             ws.send(JSON.stringify({data}));        
 
             checkwon(value,player);
@@ -88,7 +90,7 @@
             if (count >= 9) {
                 var data = { 'type': 'over' }
                 ws.send(JSON.stringify({ data }))
-                swal("good game ended, MAtch Tie", "warning")
+                 swal("good game ended, MAtch Tie", "warning")
             }
 
         } 
@@ -129,7 +131,8 @@
          if(data["data"]["type"] == "end" && data["data"]["player"] == player) {
             swal("sorry","you lose","error")
          }else if(data["data"]["type"] == "over") {
-                swal("game over","no one win ","warning")
+                 alert("game over no one win")
+                 
          }else if(data["data"]["type"] == "running" && data["data"]["player"] !== player) {
                 setAnotherUserTest(data["data"]["index"],data["data"]["player"])
          }                           
