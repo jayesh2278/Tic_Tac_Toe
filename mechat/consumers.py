@@ -10,8 +10,7 @@ class MySyncConsumer(SyncConsumer):
     def websocket_connect(self,event):
         #this group name data send from url so splite url and get group name by using scope
         #group_name = self.scope['url_route']['kwargs']['groupname']
-        print("channels layer ",self.channel_layer)
-        print("channel name",self.channel_name)
+        
         async_to_sync( self.channel_layer.group_add)('programer',self.channel_name)
         
         self.send({
